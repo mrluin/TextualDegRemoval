@@ -1,0 +1,125 @@
+name: SFNet_image_dehazing_outdoor
+model_type: RefGuidedImageCleanModel
+scale: 1
+num_gpu: 4
+manual_seed: 100
+
+datasets:
+  train:
+    name: Trainset
+    type: Dataset_PairedDehazeWithRef
+
+    meta_info_file: path_to_meta_info_file
+    lqroot: paths_to_lq
+    hqroot: paths_to_hq
+    refroot: paths_to_ref
+
+    geometric_augs: true
+
+    filename_tmpl: '{}'
+    io_backend:
+      type: disk
+
+    use_shuffle: true
+    num_worker_per_gpu: 4
+    batch_size_per_gpu: 8
+
+    mini_batch_sizes: [8]
+    iters: [1000000]
+    gt_size: 384
+    gt_sizes: [384]
+
+    prefetch_mode: "cuda"
+    pin_memory: true
+
+  val:
+    name: Valset
+    type: Dataset_PairedDehazeWithRef
+
+    meta_info_file: paths_to_meta_info_file
+    lqroot: paths_to_lq
+    hqroot: paths_to_hq
+    refroot: paths_to_ref
+
+    io_backend:
+      type: disk
+
+network_g:
+  type: SFNetRefFusion
+  mode: train
+  num_res: 16
+
+  nf: 32
+  ext_n_blocks: [4,4,4,4]
+  reffusion_n_blocks: [2,2,2,2]
+  reffusion_n_blocks_middle: 1
+  scale: 1
+  num_nbr: 1
+  psize: 3
+  lr_block_size: 8
+  ref_down_block_size: 1.5
+  dilations: [1,2,3]
+
+path:
+  pretrain_dino: path_to_dino
+  pretrain_network_g: path_to_pretrained_model
+  strict_load_g: False
+  resume_state: ~
+
+train:
+  total_iter: 1000000
+  warmup_iter: -1
+  use_grad_clip: true
+  param_fix_iterations: 20000
+
+  scheduler:
+    type: CosineAnnealingRestartCyclicLR
+    periods: [306000, 694000]
+    restart_weights: [1,1]
+    eta_mins: [0.0003,0.000001]
+
+  mixing_augs:
+    mixup: false
+    mixup_beta: 1.2
+    use_identity: true
+
+  optim_g:
+    type: AdamW
+    lr: !!float 2e-4
+    ref_lr: !!float 1e-4
+    weight_decay: !!float 1e-4
+    betas: [0.9, 0.999]
+
+  # losses
+  pixel_opt:
+    type: L1Loss
+    loss_weight: 1
+    reduction: mean
+
+val:
+  val_freq:  !!float 5e3
+  save_img: false
+  rgb2bgr: true
+  use_image: true
+  max_minibatch: 8
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: false
+
+logger:
+  check_freq: 5000
+  print_freq: 1000
+  save_checkpoint_freq: !!float 5e3
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+dist_params:
+  backend: nccl
+  port: 29500
+
+

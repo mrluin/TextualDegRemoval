@@ -300,11 +300,11 @@ class PairedLQHQDataset(Dataset):
             if task_ == "denoise":
                 self.image_paths_hq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "*"))))
             elif task_ == "deblur":
-                self.image_paths_lq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "*"))))
-                self.image_paths_hq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "*"))))
+                self.image_paths_lq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "lq", "*"))))
+                self.image_paths_hq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "hq", "*"))))
             elif task_ == "derain":
-                self.image_paths_lq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "*"))))
-                self.image_paths_hq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "*"))))
+                self.image_paths_lq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "lq", "*"))))
+                self.image_paths_hq[task_].extend(sorted(glob.glob(os.path.join(dataroot_, "hq", "*"))))
             elif task_ == "dehaze":
                 meta_info_file = os.path.join(dataroot_, "meta_info.txt")
                 with open(meta_info_file) as f:
